@@ -1,11 +1,13 @@
 package ventanas;
 
 import com.componentes.Table;
+import conexion.ConexionTrabajador;
 import java.awt.Container;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.awt.event.KeyAdapter;
 import java.awt.event.KeyEvent;
+import java.sql.SQLException;
 import javax.swing.JButton;
 import javax.swing.JFrame;
 import javax.swing.JLabel;
@@ -15,7 +17,6 @@ import javax.swing.JTextField;
 import javax.swing.SpinnerNumberModel;
 
 //Clases del componente logico
-import logica.ListaTrabajadores;
 import logica.Trabajador;
 import logica.Validacion;
 
@@ -35,7 +36,7 @@ public class Modificacion extends JFrame {
 
     public final static String NOMBRE = "NOMBRE", SUELDO = "SUELDO", RETARDO = "RETARDO", FALTA = "FALTA";
 
-    public Modificacion(String param, Trabajador t,ListaTrabajadores lista, Table tabla) { //Parametro a modificar, Trabajador a modificar, Tabla en la cual se actualizará
+    public Modificacion(String param, Trabajador t, Table tabla) { //Parametro a modificar, Trabajador a modificar, Tabla en la cual se actualizará
 
         this.param = param;
         this.t = t;
@@ -75,7 +76,7 @@ public class Modificacion extends JFrame {
 
             @Override
             public void actionPerformed(ActionEvent e) {
-
+                
                 switch (param) {
                     case NOMBRE:
                         JTextField campos[] = {campo1, campo2};
@@ -93,22 +94,32 @@ public class Modificacion extends JFrame {
                             JOptionPane.showMessageDialog(contexto, "Debe rellenar el campo", "ERROR", JOptionPane.WARNING_MESSAGE);
                         }else{
                             t.setSalario(Float.parseFloat(campo1.getText()));
+                            t.setSalarioFinal(t.getSalarioFinal());
                         }
                         break;
                         
                     case RETARDO:
                         t.setRetardos((int) spinner.getValue());
+                        t.setSalarioFinal(t.getSalarioFinal());
                         break;
                         
                     case FALTA:
                         t.setFaltas((int) spinner.getValue());
+                        t.setSalarioFinal(t.getSalarioFinal());
                         break;
                     default:
                         break;
                 }
                 
-                setVisible(false);
-                tabla.actualizarTabla(lista.toTable(), Principal.encabezados);
+                ConexionTrabajador ct = new ConexionTrabajador(t, t.getTipo());
+                if (ct.update() == 1){
+                    try {
+                        tabla.actualizarTabla(ct.toTable(), Principal.encabezados);
+                    } catch (SQLException ex) {
+                        JOptionPane.showMessageDialog(null, "Error al actualizar la tabla "+ex.getMessage());
+                    }
+                }
+                dispose();
             }
 
         });

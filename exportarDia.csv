@@ -1,5 +1,6 @@
-Nombre,Apellido,Tipo,Fecha de Resgistro,Salario
-adfa,fadsfda,DIA,2022/05/17 06:38:15,24.0
-adsad,fsgerh,DIA,2022/05/17 06:38:21,546546.0
-Hola,Holaaaa,DIA,2022/05/18 05:05:50,300.0
-Panchito,Lopez,DIA,2022/05/18 05:21:02,200.0
+Nombre,Apellido,Sueldo,Retardos,Faltas,SueldoFinal,Fecha de Resgistro
+Erick,Martinez,300.0,0,0,300.0,2022-06-08 13:47:56
+Angelo,Rosario,1000.0,1,0,1000.0,2022-06-08 23:34:18
+Misael,Velasco,700.0,1,1,0.0,2022-06-08 13:33:12
+Saul,Hernandez,50.0,0,0,50.0,2022-06-09 00:19:42
+AAA,eee,11.0,0,0,11.0,2022-06-09 00:20:16

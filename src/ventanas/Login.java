@@ -1,5 +1,6 @@
 package ventanas;
 
+import conexion.ConexionUsuario;
 import java.awt.BorderLayout;
 import java.awt.Container;
 import java.awt.Cursor;
@@ -17,11 +18,13 @@ import javax.swing.JOptionPane;
 import javax.swing.JPanel;
 import javax.swing.JPasswordField;
 import javax.swing.border.LineBorder;
+import java.sql.ResultSet;
+import java.sql.SQLException;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 
 //Clases del componente logico
-import logica.ListaUsuarios;
 import logica.Usuario;
-
 
 /**
  *
@@ -75,9 +78,24 @@ public class Login extends JFrame {
         userLabel.setBounds(10, 60, 60, 20);
         panelDer.add(userLabel);
 
-        String nombresUsuario[] = new String[ListaUsuarios.lista.size()];
-        for (int i = 0; i < nombresUsuario.length; i++) {
-            nombresUsuario[i] = ListaUsuarios.lista.get(i).getNombre();
+        ConexionUsuario cu = new ConexionUsuario(null);
+        ResultSet rs = cu.obtenerTodos();
+
+        int numFilas = 0;
+        String nombresUsuario[] = null;
+        try {
+            while (rs.next()) {
+                numFilas++;
+            }
+
+            nombresUsuario = new String[numFilas];
+            rs.beforeFirst();
+            for (int i = 0; i < nombresUsuario.length; i++) {
+                rs.next();
+                nombresUsuario[i] = rs.getString(2);
+            }
+        } catch (SQLException ex) {
+            JOptionPane.showMessageDialog(null, "Error " + ex.getMessage());
         }
 
         userField = new JComboBox(nombresUsuario);
@@ -127,25 +145,28 @@ public class Login extends JFrame {
             @Override
             public void actionPerformed(ActionEvent e) {
 
-                Usuario u = ListaUsuarios.get(userField.getSelectedIndex());
-                boolean iguales = true;
-                
-                try{
-                    for (int i = 0; i<passwordField.getPassword().length; i++){
-                    if (passwordField.getPassword()[i] != u.getPassword()[i]){
-                        iguales = false;
-                        break;
+                Usuario u = new Usuario(String.valueOf(userField.getSelectedItem()), passwordField.getPassword(), null);
+                ConexionUsuario cu = new ConexionUsuario(u);
+
+                String resultado = cu.accesar();
+
+                if (!resultado.equals("denegado")) {
+
+                    ResultSet rs = cu.obtener();
+                    try {
+                        if (rs.next()) {
+                            int id = rs.getInt("id");
+                            u.setId(id);
+                            u.setRol(resultado);
+                        }
+
+                    } catch (SQLException ex) {
+                        Logger.getLogger(Login.class.getName()).log(Level.SEVERE, null, ex);
                     }
-                    }
-                }catch(ArrayIndexOutOfBoundsException ex){
-                    iguales = false;
-                }
-                
-                if (iguales) {
                     setVisible(false);
                     Cargando carga = new Cargando(u);
                     carga.setVisible(true);
-                    
+
                 } else {
                     JOptionPane.showMessageDialog(contexto, "Contraseña Incorrecta", "ACCESO DENEGADO", JOptionPane.WARNING_MESSAGE);
                 }
@@ -156,5 +177,7 @@ public class Login extends JFrame {
         panelDer.add(loginButton);
 
         contenedor.add(panelDer);
+        
+        passwordField.setText("pablO1234");
     }
 }

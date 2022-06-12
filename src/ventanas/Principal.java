@@ -4,6 +4,8 @@ import com.componentes.JButtonConFondo;
 import com.componentes.JButtonTrasparente;
 import com.componentes.ModeloTabla;
 import com.componentes.Table;
+import conexion.ConexionTrabajador;
+import conexion.ConexionUsuario;
 import java.awt.BorderLayout;
 import java.awt.Container;
 import java.awt.Dimension;
@@ -14,10 +16,9 @@ import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.awt.event.WindowAdapter;
 import java.awt.event.WindowEvent;
-import java.io.File;
 import java.io.IOException;
-import java.util.logging.Level;
-import java.util.logging.Logger;
+import java.sql.SQLException;
+import java.sql.ResultSet;
 import javax.swing.BorderFactory;
 import javax.swing.ImageIcon;
 import javax.swing.JColorChooser;
@@ -31,11 +32,8 @@ import javax.swing.JOptionPane;
 import javax.swing.JPanel;
 import javax.swing.JScrollPane;
 import javax.swing.border.BevelBorder;
-import javax.swing.table.DefaultTableModel;
 
 //clases del componente logico
-import logica.ListaTrabajadores;
-import logica.ListaUsuarios;
 import logica.Reloj;
 import logica.Trabajador;
 import logica.Usuario;
@@ -61,33 +59,18 @@ public class Principal extends JFrame {
     private JComboBox filtrar;
     private JLabel tituloCenter;
     private JFrame contexto = this;
+    Usuario u = null;
 
-    private ListaTrabajadores trabajadoresDia, trabajadoresSemana, trabajadoresQuincena;
     private Table tabla;
-    public static String encabezados[] = {"Nombre(s)", "Apellidos", "Salario Base", "Retardos", "Faltas", "Salario Final", "Fecha de Registro"};
+    public static String encabezados[] = {"ID","Nombre(s)", "Apellidos", "Salario Base", "Retardos", "Faltas", "Salario Final", "Fecha de Registro"};
 
-    public Principal() {
+    public Principal(Usuario u) {
 
-        //Cargar datos de las listas
-        trabajadoresDia = new ListaTrabajadores(new File("trabajadoresDia.dat"));
-        trabajadoresSemana = new ListaTrabajadores(new File("trabajadoresSemana.dat"));
-        trabajadoresQuincena = new ListaTrabajadores(new File("trabajadoresQuincena.dat"));
-
-        try {
-
-            trabajadoresDia.setList(trabajadoresDia.loadData());
-            trabajadoresSemana.setList(trabajadoresSemana.loadData());
-            trabajadoresQuincena.setList(trabajadoresQuincena.loadData());
-
-        } catch (IOException ex) {
-            JOptionPane.showMessageDialog(null, "Error al leer los archivos: "+ex.getMessage(),"ERROR",JOptionPane.ERROR_MESSAGE);
-        } catch (ClassNotFoundException ex) {
-            
-        }
+        this.u = u;
 
         this.setExtendedState(JFrame.MAXIMIZED_BOTH);
         this.setMinimumSize(new Dimension(850, 600));
-        this.setTitle("GESTION DE TRABAJADORES - Sesion de: " + ListaUsuarios.getUsuarioActivo().getNombre());
+        this.setTitle("GESTION DE TRABAJADORES - Sesion de: "+u.getNombre());
         this.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
         this.addWindowListener(new WindowAdapter() {
 
@@ -306,9 +289,9 @@ public class Principal extends JFrame {
             @Override
             public void actionPerformed(ActionEvent e) {
 
-                if (ListaUsuarios.getUsuarioActivo().getRol().equals(Usuario.ADMINISTRADOR)) {
+                if (u.getRol().equals(Usuario.ADMINISTRADOR)) {
 
-                    AgregarTrabajador agregar = new AgregarTrabajador(tituloCenter.getText(), obtenerListaActual(), tabla);
+                    AgregarTrabajador agregar = new AgregarTrabajador(tituloCenter.getText(), tabla);
                     agregar.setVisible(true);
                 } else {
                     JOptionPane.showMessageDialog(contexto, "Solo los administradores pueden agregar trabajadores","ACCESO DENEGADO", JOptionPane.WARNING_MESSAGE);
@@ -327,18 +310,40 @@ public class Principal extends JFrame {
             @Override
             public void actionPerformed(ActionEvent e) {
 
-                if (ListaUsuarios.getUsuarioActivo().getRol().equals(Usuario.ADMINISTRADOR)) {
+                if (u.getRol().equals(Usuario.ADMINISTRADOR)) {
 
                     int index = tabla.getSelectedRow();
                     if (index == -1) {
                         return; //Si no hay nada seleccionado, se cancela el evento
                     }
+                    
+                    Trabajador trabajadorAux = new Trabajador(null, null, 0, tituloCenter.getText());
+                    
+                    
+                    int id = (int)tabla.getValueAt(tabla.getSelectedRow(), 0);
+                    System.out.println("El id seleccionado para borrar es "+id);
+                    trabajadorAux.setId(id);
+                    
+                    String name = (String) tabla.getValueAt(tabla.getSelectedRow(), 1);
+                    String apellido = (String) tabla.getValueAt(tabla.getSelectedRow(), 2);
+                    
+                    trabajadorAux.setNombre(name);
+                    trabajadorAux.setApellido(apellido);
+                    
                     int opcion = JOptionPane.showConfirmDialog(contexto, "¿Esta seguro que desea eliminar al trabajador: "
-                            + obtenerListaActual().getTrabajador(index).getNombre() + " " + obtenerListaActual().getTrabajador(index).getApellido() + "?");
+                            + trabajadorAux.getNombre() + " " + trabajadorAux.getApellido() + "?", "SE REQUIERE CONFIRMACION", JOptionPane.YES_NO_OPTION);
 
                     if (opcion == JOptionPane.YES_OPTION) {
-                        obtenerListaActual().removeTrabajador(index);
-                        tabla.actualizarTabla(obtenerListaActual().toTable(), encabezados);
+                        
+                        ConexionTrabajador ct = new ConexionTrabajador(trabajadorAux, tituloCenter.getText());
+                        if (ct.delete() == 1){
+                            try {
+                                tabla.actualizarTabla(ct.toTable(), encabezados);
+                            } catch (SQLException ex) {
+                                System.out.println("Error al actualizar tabla"+ex.getMessage());
+                            }
+                        }
+                        
                     }
 
                 } else {
@@ -354,19 +359,22 @@ public class Principal extends JFrame {
         exportar.addActionListener(new ActionListener(){
             @Override
             public void actionPerformed(ActionEvent e) {
-                VentanaExportar exportar = new VentanaExportar(obtenerListaActual());
+                VentanaExportar exportar = new VentanaExportar(tituloCenter.getText());
                 exportar.setVisible(true);
             }
         });
         centerNorte.add(exportar);
 
-        Object datos[][] = obtenerListaActual().toTable();
-
         JPanel centerCenter = new JPanel(new BorderLayout());
         tabla = new Table(new ModeloTabla(), Constantes.colorPrincipal);
         tabla.setFont(Constantes.fontPlain);
         JScrollPane sc = new JScrollPane(tabla);
-        tabla.actualizarTabla(datos, encabezados);
+        ConexionTrabajador ct = new ConexionTrabajador(null, tituloCenter.getText());
+        try {
+            tabla.actualizarTabla(ct.toTable(), encabezados);
+        } catch (SQLException ex) {
+            JOptionPane.showMessageDialog(contexto, "Error al actualizar la tabla "+ex.getMessage());
+        }
         centerCenter.add(sc);
         center.add(centerCenter, BorderLayout.CENTER);
 
@@ -374,8 +382,8 @@ public class Principal extends JFrame {
 
     private void gestionarUsuario() { //Posibilidad de cambiar nombre, contraseña y rol, eliminar, agregar, solo si el usuario activo es admi
 
-        if (ListaUsuarios.getUsuarioActivo().getRol().equals(Usuario.ADMINISTRADOR)) {
-            RegistroUsuario registroUsuario = new RegistroUsuario();
+        if (u.getRol().equals(Usuario.ADMINISTRADOR)) {
+            RegistroUsuario registroUsuario = new RegistroUsuario(u);
             registroUsuario.setVisible(true);
         } else {
             JOptionPane.showMessageDialog(this, "Solo los administradores pueden gestionar usuarios", "ACCESO DENEGADO", JOptionPane.WARNING_MESSAGE);
@@ -385,79 +393,25 @@ public class Principal extends JFrame {
 
     private void cerrarSesion() {
 
-        ListaUsuarios.getUsuarioActivo().setSesionActiva(false);
-
-        try {
-            ListaUsuarios.saveData();
-        } catch (IOException ex) {
-            Logger.getLogger(Principal.class.getName()).log(Level.SEVERE, null, ex);
-        }
+        //Programar cerrar la sesion en la bbdd
+        ConexionUsuario cu = new ConexionUsuario(u);
+        cu.cerrarSesionUsuario();
+        
     }
 
+    
     private void guardarDatos() {
+        //Solo guardar archivos de configuraciones
         try {
-
-            if (!trabajadoresDia.getList().isEmpty()) {
-                trabajadoresDia.ordenarPorFecha();
-            }
-            if (!trabajadoresSemana.getList().isEmpty()) {
-                trabajadoresSemana.ordenarPorFecha();
-            }
-            if (!trabajadoresQuincena.getList().isEmpty()) {
-                trabajadoresQuincena.ordenarPorFecha();
-            }
-
-            trabajadoresDia.saveData();
-            trabajadoresSemana.saveData();
-            trabajadoresQuincena.saveData();
             
             Constantes.saveDataColorPrincipal();
             Constantes.saveDataColorLight();
             Constantes.saveDataColorAccent();
 
-        } catch (IOException ex) {
-            Logger.getLogger(Principal.class.getName()).log(Level.SEVERE, null, ex);
-        }
-    }
-
-    private ListaTrabajadores obtenerListaActual() {
-
-        switch (tituloCenter.getText()) {
-            case Trabajador.DIA:
-                return trabajadoresDia;
-            case Trabajador.SEMANA:
-                return trabajadoresSemana;
-            case Trabajador.QUINCENA:
-                return trabajadoresQuincena;
-            default:
-                return null;
-        }
+        } catch (IOException ex) {}
     }
 
     private void filtrarDatos(String filtro) {
-        switch (filtro) {
-            case "Nombre":
-                obtenerListaActual().ordenarPorNombre();
-                break;
-            case "Apellido":
-                obtenerListaActual().ordenarPorApellido();
-                break;
-            case "Sueldo":
-                obtenerListaActual().ordenarPorSalario();
-                break;
-            case "Retardos":
-                obtenerListaActual().ordenarPorRetardos();
-                break;
-            case "Faltas":
-                obtenerListaActual().ordenarPorFaltas();
-                break;
-            case "Fecha de Registro":
-                obtenerListaActual().ordenarPorFecha();
-                break;
-            default:
-                break;
-        }
-        tabla.actualizarTabla(obtenerListaActual().toTable(), encabezados);
     }
     
     private void iniciarReloj(){
@@ -474,7 +428,13 @@ public class Principal extends JFrame {
         public void actionPerformed(ActionEvent e) {
 
             tituloCenter.setText(e.getActionCommand());
-            tabla.actualizarTabla(obtenerListaActual().toTable(), encabezados);
+            
+            ConexionTrabajador ct = new ConexionTrabajador(null, tituloCenter.getText());
+            try {
+                tabla.actualizarTabla(ct.toTable(), encabezados);
+            } catch (SQLException ex) {
+                System.out.println(ex.getMessage());
+            }
 
         }
     }
@@ -485,7 +445,7 @@ public class Principal extends JFrame {
         public void actionPerformed(ActionEvent e) {
 
             //Si es un registrador, no debe hacer nada
-            if (ListaUsuarios.getUsuarioActivo().getRol().equals(Usuario.REGISTRADOR) && (e.getActionCommand().equals(Modificacion.NOMBRE) || e.getActionCommand().equals(Modificacion.SUELDO))) {
+            if (u.getRol().equals(Usuario.REGISTRADOR) && (e.getActionCommand().equals(Modificacion.NOMBRE) || e.getActionCommand().equals(Modificacion.SUELDO))) {
                 JOptionPane.showMessageDialog(contexto, "Solo los administradores y subjefes pueden moficar el nombre y el sueldo", "ACCESO DENEGADO", JOptionPane.WARNING_MESSAGE);
             } else {
 
@@ -493,8 +453,31 @@ public class Principal extends JFrame {
                 if (index == -1) {
                     return;
                 }
-                Trabajador t = obtenerListaActual().getTrabajador(index);
-                Modificacion m = new Modificacion(e.getActionCommand(),t,obtenerListaActual(),tabla);
+                
+                int id = (int)tabla.getValueAt(index, 0); //Obtenemos el id seleccionado en la tabla
+                float salario = (float)tabla.getValueAt(index, 3);
+                Trabajador t = new Trabajador(null, null, salario, tituloCenter.getText());
+                t.setId(id);
+                ConexionTrabajador ct = new ConexionTrabajador(t, tituloCenter.getText());
+                ResultSet rs = ct.obtener();
+                
+                try {
+                    if (rs.next()){
+                        t.setNombre(rs.getString("name"));
+                        t.setApellido(rs.getString("lastname"));
+                        t.setSalario(rs.getFloat("sueldo"));
+                        t.setFaltas(rs.getInt("faltas"));
+                        t.setRetardos(rs.getInt("retardos"));
+                        t.setSalarioFinal(rs.getFloat("sueldofinal"));
+                        t.setFechaRegistro(rs.getString("fecharegistro"));
+                        t.setTipo(tituloCenter.getText());
+                    }
+                } catch (SQLException ex) {
+                    System.out.println(ex.getMessage());
+                    return;
+                }
+                
+                Modificacion m = new Modificacion(e.getActionCommand(),t,tabla);
                 m.setVisible(true);
             }
         }

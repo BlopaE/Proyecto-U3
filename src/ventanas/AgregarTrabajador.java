@@ -2,16 +2,17 @@
 package ventanas;
 
 import com.componentes.Table;
+import conexion.ConexionTrabajador;
 import java.awt.Container;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
+import java.sql.SQLException;
 import javax.swing.JButton;
 import javax.swing.JFrame;
 import javax.swing.JLabel;
+import javax.swing.JOptionPane;
 import javax.swing.JTextField;
-import logica.ListaTrabajadores;
 import logica.Trabajador;
-
 /**
  *
  * @author Pablo Erick Ramírez Cruz
@@ -21,7 +22,7 @@ public class AgregarTrabajador extends JFrame{
     private JTextField nombreTF,apellidoTF,sueldoTF;
     private JButton guardar;
 
-    public AgregarTrabajador(String tipo, ListaTrabajadores lista, Table tabla) {
+    public AgregarTrabajador(String tipo, Table tabla) {
         
         
         this.setSize(300,300);
@@ -73,16 +74,18 @@ public class AgregarTrabajador extends JFrame{
             @Override
             public void actionPerformed(ActionEvent e) {
                 Trabajador t = new Trabajador(nombreTF.getText(),apellidoTF.getText(),Float.parseFloat(sueldoTF.getText()),tipo);
-                lista.addTrabajador(t);
-                tabla.actualizarTabla(lista.toTable(), Principal.encabezados);
-                setVisible(false);
+                ConexionTrabajador ct = new ConexionTrabajador(t, tipo);
+                if (ct.insertTrabajador() == 1){
+                    setAlwaysOnTop(false);
+                    try {
+                        tabla.actualizarTabla(ct.toTable(), Principal.encabezados);
+                    } catch (SQLException ex) {
+                        JOptionPane.showMessageDialog(null, "Error al actualizar la tabla: "+ex.getMessage());
+                    }
+                    dispose();
+                }
             }
-            
         });
-        contenedor.add(guardar);
-        
-    }
-   
-    
-    
+        contenedor.add(guardar);       
+    }   
 }

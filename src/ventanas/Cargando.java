@@ -48,7 +48,7 @@ public class Cargando extends JDialog implements Runnable{
             barrita.setValue(i);
             etiqueta.setText(etiqueta.getText().equals("Cargando ...") ? "Cargando " : etiqueta.getText().concat("."));
             try {
-                h.sleep(300);
+                h.sleep(50);
             } catch (InterruptedException ex) {
                 
             }
@@ -56,7 +56,7 @@ public class Cargando extends JDialog implements Runnable{
         }
         this.dispose();
         u.setSesionActiva(true);
-        Principal ventanaPrincipal = new Principal();
+        Principal ventanaPrincipal = new Principal(u);
         
         ventanaPrincipal.setVisible(true);
     }
