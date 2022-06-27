@@ -136,70 +136,73 @@ public class RegistroUsuario extends JFrame {
                     {userField, passField, passConfirmField},
                     {"Debe ingresar un nombre de usuario", "Debe ingresar una contraseña", "Debe confirmar su contraseña"}
                 };
+
                 String errores = Validacion.comprobarVacios(matriz);
+
                 if (!errores.isEmpty()) {
                     JOptionPane.showMessageDialog(contexto, errores, "ERROR", JOptionPane.WARNING_MESSAGE);
-                } else {
-                    // Valida contraseña
-                    if (!passField.getText().isEmpty() && passField.getText().equals(passConfirmField.getText())) {
+                    return;
+                }
+                // Valida contraseña
+                if (!passField.getText().isEmpty() && passField.getText().equals(passConfirmField.getText())) {
 
-                        if (Validacion.comprobarContraseña(passConfirmField.getText())) {
+                    if (Validacion.comprobarContraseña(passConfirmField.getText())) {
 
-                            //Registrar el usuario
-                            String nombre = userField.getText();
-                            char[] pass = passConfirmField.getText().toCharArray();
-                            String rol = opciones.getSelection().getActionCommand();
-                            Usuario nuevo = new Usuario(nombre, pass, rol);
+                        //Registrar el usuario
+                        String nombre = userField.getText();
+                        char[] pass = passConfirmField.getText().toCharArray();
+                        String rol = opciones.getSelection().getActionCommand();
+                        Usuario nuevo = new Usuario(nombre, pass, rol);
 
-                            ConexionUsuario cu = new ConexionUsuario(nuevo);
-                            if (cu.insertUsuario() == 1) {
-                                JOptionPane.showMessageDialog(null, "Se registró con exito");
+                        ConexionUsuario cu = new ConexionUsuario(nuevo);
+                        if (cu.insertUsuario() == 1) {
+                            JOptionPane.showMessageDialog(null, "Se registró con exito");
 
-                            } else {
-                                JOptionPane.showMessageDialog(null, "No se pudo guardar");
-                            }
-
-                            try {
-                                //Se necesita comprobar si la lista tiene un solo elemento
-                                int cantidadFilas = 0;
-                                ResultSet rs = cu.obtenerTodos();
-                                while (rs.next()) {
-                                    cantidadFilas++;
-                                }
-
-                                if (cantidadFilas == 1) {
-                                    //Se acaba de crear el primer usuario, entonces se abre el programa por primera vez y loggearse
-                                    Login login = new Login();
-                                    login.setVisible(true);
-                                    setVisible(false);
-                                } else {
-                                    modelo.removeAllElements();
-                                    ConexionUsuario cu2 = new ConexionUsuario(null);
-                                    ResultSet rs2 = cu2.obtenerTodos();
-                                    try {
-                                        int i = 0;
-                                        while (rs2.next()) {
-                                            int id = rs2.getInt("id");
-                                            String name = rs2.getString("name");
-                                            String rol2 = rs2.getString("rol");
-
-                                            modelo.add(i, id + "-" + name + " " + rol2);
-                                            i++;
-                                        }
-                                    } catch (SQLException ex) {
-                                        System.out.println(ex.getMessage());
-                                    }
-                                }
-                            } catch (SQLException ex) {
-                                JOptionPane.showMessageDialog(contexto, "Error " + ex.getMessage());
-                            }
                         } else {
-                            JOptionPane.showMessageDialog(contexto, "Su contraseña debe tener de 8 a 16 caracteres, incluyendo mayusculas, minusculas y números", "CONTRASEÑA INSEGURA", JOptionPane.WARNING_MESSAGE);
+                            JOptionPane.showMessageDialog(null, "No se pudo guardar");
+                        }
+
+                        try {
+                            //Se necesita comprobar si la lista tiene un solo elemento
+                            int cantidadFilas = 0;
+                            ResultSet rs = cu.obtenerTodos();
+                            while (rs.next()) {
+                                cantidadFilas++;
+                            }
+
+                            if (cantidadFilas == 1) {
+                                //Se acaba de crear el primer usuario, entonces se abre el programa por primera vez y loggearse
+                                Login login = new Login();
+                                login.setVisible(true);
+                                setVisible(false);
+                            } else {
+                                modelo.removeAllElements();
+                                ConexionUsuario cu2 = new ConexionUsuario(null);
+                                ResultSet rs2 = cu2.obtenerTodos();
+                                try {
+                                    int i = 0;
+                                    while (rs2.next()) {
+                                        int id = rs2.getInt("id");
+                                        String name = rs2.getString("name");
+                                        String rol2 = rs2.getString("rol");
+
+                                        modelo.add(i, id + "-" + name + " " + rol2);
+                                        i++;
+                                    }
+                                } catch (SQLException ex) {
+                                    System.out.println(ex.getMessage());
+                                }
+                            }
+                        } catch (SQLException ex) {
+                            JOptionPane.showMessageDialog(contexto, "Error " + ex.getMessage());
                         }
                     } else {
-                        JOptionPane.showMessageDialog(contexto, "Las contraseñas no coinciden, compruebe los campos", "CONTRASEÑAS NO IGUALES", JOptionPane.WARNING_MESSAGE);
+                        JOptionPane.showMessageDialog(contexto, "Su contraseña debe tener de 8 a 16 caracteres, incluyendo mayusculas, minusculas y números", "CONTRASEÑA INSEGURA", JOptionPane.WARNING_MESSAGE);
                     }
+                } else {
+                    JOptionPane.showMessageDialog(contexto, "Las contraseñas no coinciden, compruebe los campos", "CONTRASEÑAS NO IGUALES", JOptionPane.WARNING_MESSAGE);
                 }
+
             }
 
         });
@@ -325,7 +328,7 @@ public class RegistroUsuario extends JFrame {
                     try {
                         if (rs.next()) {
                             userField.setText(rs.getString("name"));
-                            passField.setText(rs.getString("password"));
+                            //passField.setText(rs.getString("password"));
                         }
                     } catch (SQLException ex) {
 
@@ -352,19 +355,18 @@ public class RegistroUsuario extends JFrame {
                     usuarioAux.setId(id);
                     usuarioAux.setNombre(userField.getText());
                     usuarioAux.setPassword(passField.getText().toCharArray());
-                    if (opciones.getSelection() == null){
+                    if (opciones.getSelection() == null) {
                         return;
                     }
                     usuarioAux.setRol(opciones.getSelection().getActionCommand());
                     ConexionUsuario cu = new ConexionUsuario(usuarioAux);
 
-                    
-                    if (!Validacion.comprobarContraseña(passField.getText())){
+                    if (!Validacion.comprobarContraseña(passField.getText())) {
                         JOptionPane.showMessageDialog(null, "Contraseña no valida");
                         return;
                     }
-                    
-                    if (!passField.getText().equals(passConfirmField.getText())){
+
+                    if (!passField.getText().equals(passConfirmField.getText())) {
                         JOptionPane.showMessageDialog(null, "La contraseña no coincide");
                         return;
                     }

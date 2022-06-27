@@ -6,10 +6,9 @@ import java.sql.PreparedStatement;
 import java.sql.Connection;
 import java.sql.ResultSet;
 import java.sql.SQLException;
-import java.util.logging.Level;
-import java.util.logging.Logger;
 import javax.swing.JOptionPane;
 import logica.Usuario;
+import ventanas.Sha256;
 
 public class ConexionUsuario {
 
@@ -20,7 +19,7 @@ public class ConexionUsuario {
 
         this.usuario = usuario;
     }
-
+    
     //Insertar un usario
     public int insertUsuario() {
         int res = 0;
@@ -28,7 +27,9 @@ public class ConexionUsuario {
             con = DriverManager.getConnection(Conexion.cadena, Conexion.usuario, Conexion.password);
             PreparedStatement pa = con.prepareStatement("insert into usuarios(name,password,rol) " + "values (?,?,?)");
             pa.setString(1, usuario.getNombre());
-            pa.setString(2, String.valueOf(usuario.getPassword()));
+            
+            String passEncrypted = Sha256.convertirSHA256(String.valueOf(usuario.getPassword()));
+            pa.setString(2, passEncrypted);
             pa.setString(3, usuario.getRol());
 
             res = pa.executeUpdate();
@@ -46,7 +47,8 @@ public class ConexionUsuario {
             PreparedStatement pa = con.prepareStatement(" select * from usuarios "
                     + "where name = ? and password = ?");
             pa.setString(1, usuario.getNombre());
-            pa.setString(2, String.valueOf(usuario.getPassword()));
+            String passEncrypted = Sha256.convertirSHA256(String.valueOf(usuario.getPassword()));
+            pa.setString(2, passEncrypted);
             ResultSet rs = pa.executeQuery();
 
             if (rs.next()) {
@@ -99,7 +101,8 @@ public class ConexionUsuario {
             PreparedStatement pa = con.prepareStatement(" select * from usuarios "
                     + "where name = ? and password = ?", ResultSet.TYPE_SCROLL_SENSITIVE, ResultSet.CONCUR_UPDATABLE);
             pa.setString(1, usuario.getNombre());
-            pa.setString(2, String.valueOf(usuario.getPassword()));
+            String passEncrypted = Sha256.convertirSHA256(String.valueOf(usuario.getPassword()));
+            pa.setString(2, passEncrypted);
             rs = pa.executeQuery();
             
         }catch(Exception ex){
@@ -148,7 +151,8 @@ public class ConexionUsuario {
                     = con.prepareStatement("update usuarios set name=?, password=?, rol=? "
                             + " where id= ?");
             pa.setString(1, usuario.getNombre());
-            pa.setString(2, String.valueOf(usuario.getPassword()));
+            String passEncrypted = Sha256.convertirSHA256(String.valueOf(usuario.getPassword()));
+            pa.setString(2, passEncrypted);
             pa.setString(3, usuario.getRol());
             pa.setInt(4, usuario.getId());
 

@@ -415,9 +415,6 @@ public class Principal extends JFrame {
     }
     
     private void iniciarReloj(){
-        
-        
-        
         Reloj hiloReloj = new Reloj(etiquetaReloj);
         hiloReloj.start();
     }

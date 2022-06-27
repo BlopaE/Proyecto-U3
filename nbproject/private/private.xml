@@ -5,6 +5,8 @@
         <group>
             <file>file:/D:/Usuarios/pablo/Escritorio/ProyectoUnidad1-main/src/ventanas/GestionUsuario.java</file>
             <file>file:/D:/Usuarios/pablo/Escritorio/ProyectoUnidad1-main/src/conexion/Conexion.java</file>
+            <file>file:/D:/Usuarios/pablo/Escritorio/ProyectoUnidad1-main/src/ventanas/Principal.java</file>
+            <file>file:/D:/Usuarios/pablo/Escritorio/ProyectoUnidad1-main/src/ventanas/Cargando.java</file>
             <file>file:/D:/Usuarios/pablo/Escritorio/ProyectoUnidad1-main/src/ventanas/Login.java</file>
             <file>file:/D:/Usuarios/pablo/Escritorio/ProyectoUnidad1-main/src/ventanas/Main.java</file>
             <file>file:/D:/Usuarios/pablo/Escritorio/ProyectoUnidad1-main/src/ventanas/Modificacion.java</file>
@@ -12,8 +14,8 @@
             <file>file:/D:/Usuarios/pablo/Escritorio/ProyectoUnidad1-main/src/conexion/ConexionUsuario.java</file>
             <file>file:/D:/Usuarios/pablo/Escritorio/ProyectoUnidad1-main/src/ventanas/AgregarTrabajador.java</file>
             <file>file:/D:/Usuarios/pablo/Escritorio/ProyectoUnidad1-main/src/ventanas/VentanaExportar.java</file>
+            <file>file:/D:/Usuarios/pablo/Escritorio/ProyectoUnidad1-main/src/ventanas/Sha256.java</file>
             <file>file:/D:/Usuarios/pablo/Escritorio/ProyectoUnidad1-main/src/ventanas/RegistroUsuario.java</file>
-            <file>file:/D:/Usuarios/pablo/Escritorio/ProyectoUnidad1-main/src/ventanas/Principal.java</file>
         </group>
     </open-files>
 </project-private>
